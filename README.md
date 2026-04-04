@@ -1,17 +1,30 @@
-# game_hub
+# 🎮 GameHub - Games & RPG Community
 
-A new Flutter project.
+> A social networking mobile app built with Flutter, designed for gamers to discover new titles, share reviews, and connect with a vibrant community.
 
-## Getting Started
+## 📖 About the Project
 
-This project is a starting point for a Flutter application.
+**GameHub** is a platform tailored for gaming enthusiasts. Its main goal is to allow players to explore a vast catalog of games and discover new adventures intuitively. The app features a robust rating system where users can score games and publish detailed reviews about their experiences. 
 
-A few resources to get you started if this is your first Flutter project:
+To foster community engagement, GameHub integrates a social system that allows users to connect with other players, follow their friends' activity feeds, and exchange recommendations. It's a dynamic space that bridges game discovery and social interaction.
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+*This project was developed for the SI700 - Mobile Device Programming course at Unicamp (State University of Campinas).*
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## ✨ Key Features
+
+- **Explore Games:** Browse a comprehensive catalog of games, filter by genres (RPG, Indie, Platformer, etc.), and check trending titles.
+- **Ratings & Reviews:** Write detailed reviews, give star ratings, and read what the community thinks about specific games.
+- **Social Feed:** Stay updated with the latest reviews and activities from other users on the public home feed.
+- **User Profiles:** Manage your gaming life with custom profiles tracking your "Beaten Games", "Wishlist", and "Review History".
+- **Real-time Sync:** Powered by Firebase for seamless cloud data storage and real-time updates.
+
+## 🛠️ Tech Stack
+
+- **Framework:** [Flutter](https://flutter.dev/) (Dart)
+- **Backend/BaaS:** Firebase (Authentication & Cloud Database)
+- **Routing:** GoRouter (Declarative routing)
+- **UI/UX:** Google Fonts, Custom Material Design components
+- **Architecture:** Feature-First
+
+## 📱 Screenshots
+(Later...)
