@@ -55,4 +55,13 @@ class MockData {
       comments: 31,
     ),
   ];
+
+  static const List<Game> catalogGames = [
+    Game(id: '1', title: 'Hollow Knight', genre: 'Metroidvania', rating: 4.9, imageUrl: 'assets/images/hollow_knight.webp'),
+    Game(id: '2', title: 'Stardew Valley', genre: 'Simulação', rating: 4.8, imageUrl: 'assets/images/stardew.jpg'),
+    Game(id: '3', title: 'Cyberpunk 2077', genre: 'RPG', rating: 4.5, imageUrl: 'assets/images/cyber.jpg'),
+    Game(id: '4', title: 'God of War', genre: 'Ação', rating: 4.9, imageUrl: 'assets/images/god_of_war.jpg'),
+    Game(id: '5', title: 'Celeste', genre: 'Plataforma/Indie', rating: 4.8, imageUrl: 'assets/images/celeste.webp'),
+    Game(id: '6', title: 'Hades', genre: 'Ação/Indie', rating: 4.9, imageUrl: 'assets/images/hades.jpg'),
+  ];
 }

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:game_hub/src/models/mock_data.dart';
+import 'package:game_hub/src/ui/pages/catalog/game_details_screen.dart';
 import '../../../models/game.dart';
 import '../../widgets/game_card.dart';
 
@@ -10,22 +12,11 @@ class CatalogScreen extends StatefulWidget {
 }
 
 class _CatalogScreenState extends State<CatalogScreen> {
-  // --- Variáveis de Estado ---
   final ScrollController _scrollController = ScrollController();
   bool _isLoadingMore = false;
   
   Set<String> _selectedFilters = {}; 
   final List<String> _availableFilters = ['RPG', 'Indie', 'Plataforma', 'Ação', 'Simulação', 'Metroidvania'];
-
-  // Dados falsos temporários
-  final List<Game> _mockGames = [
-    const Game(id: '1', title: 'Hollow Knight', genre: 'Metroidvania', rating: 4.9, imageUrl: ''),
-    const Game(id: '2', title: 'Stardew Valley', genre: 'Simulação', rating: 4.8, imageUrl: ''),
-    const Game(id: '3', title: 'Cyberpunk 2077', genre: 'RPG', rating: 4.5, imageUrl: ''),
-    const Game(id: '4', title: 'God of War', genre: 'Ação', rating: 4.9, imageUrl: ''),
-    const Game(id: '5', title: 'Celeste', genre: 'Plataforma/Indie', rating: 4.8, imageUrl: ''),
-    const Game(id: '6', title: 'Hades', genre: 'Ação/Indie', rating: 4.9, imageUrl: ''),
-  ];
 
   @override
   void initState() {
@@ -39,10 +30,9 @@ class _CatalogScreenState extends State<CatalogScreen> {
     super.dispose();
   }
 
-  // Lógica de filtragem dos dados
   List<Game> get _filteredGames {
-    if (_selectedFilters.isEmpty) return _mockGames;
-    return _mockGames.where((game) {
+    if (_selectedFilters.isEmpty) return MockData.catalogGames;
+    return MockData.catalogGames.where((game) {
       return _selectedFilters.any((filter) => game.genre.contains(filter));
     }).toList();
   }
@@ -59,28 +49,24 @@ class _CatalogScreenState extends State<CatalogScreen> {
     if (mounted) setState(() => _isLoadingMore = false);
   }
 
-  // --- Função que abre a "Telinha" (Bottom Sheet) ---
   void _showFilterModal() {
-    // Criamos uma cópia temporária para o usuário brincar no modal sem afetar a tela atrás imediatamente
     Set<String> tempFilters = Set.from(_selectedFilters);
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF1E1E1E), // Cor de fundo do modal
+      backgroundColor: const Color(0xFF1E1E1E),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
-        // StatefulBuilder é necessário para atualizar a tela DE DENTRO do modal
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setModalState) {
             return Padding(
               padding: const EdgeInsets.all(24.0),
               child: Column(
-                mainAxisSize: MainAxisSize.min, // Ocupa apenas o tamanho necessário
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Cabeçalho do Modal
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -90,7 +76,6 @@ class _CatalogScreenState extends State<CatalogScreen> {
                       ),
                       TextButton(
                         onPressed: () {
-                          // Limpa tudo
                           setModalState(() => tempFilters.clear());
                         },
                         child: const Text('Limpar', style: TextStyle(color: Colors.white54)),
@@ -98,11 +83,9 @@ class _CatalogScreenState extends State<CatalogScreen> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  
-                  // Wrap organiza os botões e os joga para a linha de baixo se não couberem (quebra de linha automática)
                   Wrap(
-                    spacing: 8.0, // Espaço horizontal entre eles
-                    runSpacing: 8.0, // Espaço vertical entre as linhas
+                    spacing: 8.0,
+                    runSpacing: 8.0,
                     children: _availableFilters.map((filter) {
                       final isSelected = tempFilters.contains(filter);
                       return FilterChip(
@@ -119,7 +102,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
                         },
                         showCheckmark: true,
                         checkmarkColor: Colors.white,
-                        selectedColor: Colors.purple.withOpacity(0.5),
+                        selectedColor: Colors.purple.withValues(alpha: 0.5),
                         backgroundColor: const Color(0xFF121212),
                         labelStyle: TextStyle(
                           color: isSelected ? Colors.white : Colors.white70,
@@ -132,15 +115,11 @@ class _CatalogScreenState extends State<CatalogScreen> {
                       );
                     }).toList(),
                   ),
-                  
                   const SizedBox(height: 32),
-                  
-                  // Botão de Aplicar
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: () {
-                        // Salva os filtros temporários no estado oficial da tela e fecha o modal
                         setState(() {
                           _selectedFilters = tempFilters;
                         });
@@ -163,12 +142,12 @@ class _CatalogScreenState extends State<CatalogScreen> {
     );
   }
 
-  // --- UI Builders ---
-
   Widget _buildHeader() {
+    final double statusBarHeight = MediaQuery.of(context).padding.top;
+    
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.only(top: 60, left: 24, right: 24, bottom: 24),
+      padding: EdgeInsets.only(top: statusBarHeight + 16, left: 24, right: 24, bottom: 16),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [Color(0xFF8A2BE2), Color(0xFFFF1493)],
@@ -191,7 +170,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
           SearchBar(
             hintText: 'Buscar jogos...',
             leading: const Icon(Icons.search, color: Colors.white54),
-            backgroundColor: WidgetStateProperty.all(Colors.white.withOpacity(0.15)),
+            backgroundColor: WidgetStateProperty.all(Colors.white.withValues(alpha: 0.15)),
             elevation: WidgetStateProperty.all(0),
             textStyle: WidgetStateProperty.all(const TextStyle(color: Colors.white)),
             hintStyle: WidgetStateProperty.all(const TextStyle(color: Colors.white54)),
@@ -214,8 +193,6 @@ class _CatalogScreenState extends State<CatalogScreen> {
                 : '${_filteredGames.length} Resultados',
             style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
           ),
-          
-          // O Botão que chama o modal
           OutlinedButton.icon(
             onPressed: _showFilterModal,
             icon: const Icon(Icons.tune, color: Colors.purpleAccent, size: 18),
@@ -246,7 +223,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
       body: Column(
         children: [
           _buildHeader(),
-          _buildFilterBar(), // Substituímos a lista horizontal por esta barra com o botão!
+          _buildFilterBar(), 
           
           Expanded(
             child: gamesToDisplay.isEmpty
@@ -259,7 +236,6 @@ class _CatalogScreenState extends State<CatalogScreen> {
                 : GridView.builder(
                     controller: _scrollController,
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    // removemos o padding superior pois a barra de filtros já dá o espaçamento
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
                       crossAxisSpacing: 16,
@@ -267,7 +243,20 @@ class _CatalogScreenState extends State<CatalogScreen> {
                       childAspectRatio: 0.75,
                     ),
                     itemCount: gamesToDisplay.length,
-                    itemBuilder: (ctx, i) => GameCard(game: gamesToDisplay[i]),
+                    itemBuilder: (ctx, i) {
+                      final game = gamesToDisplay[i];
+                      return GameCard(
+                        game: game,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => GameDetailsScreen(game: game),
+                            ),
+                          );
+                        },
+                      );
+                    },
                   ),
           ),
           if (_isLoadingMore)

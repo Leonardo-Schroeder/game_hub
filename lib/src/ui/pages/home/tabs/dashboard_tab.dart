@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:game_hub/src/ui/pages/catalog/game_details_screen.dart';
 import '../../../../models/mock_data.dart';
 import '../../../widgets/game_card.dart';
 import '../../../widgets/review_card.dart';
@@ -8,18 +9,16 @@ class DashboardTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Usamos SingleChildScrollView + Column para montar o layout vertical completo da tela
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header com Gradiente (Igual ao mockup)
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.only(top: 60, left: 24, right: 24, bottom: 24),
+            padding: const EdgeInsets.only(top: 24, left: 24, right: 24, bottom: 24),
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFF8A2BE2), Color(0xFFFF1493)], // Purple to Deep Pink
+                colors: [Color(0xFF8A2BE2), Color(0xFFFF1493)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -42,10 +41,7 @@ class DashboardTab extends StatelessWidget {
               ],
             ),
           ),
-
           const SizedBox(height: 24),
-
-          // Seção 1: Jogos em Destaque (3 colunas iguais)
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 24.0),
             child: Row(
@@ -60,27 +56,46 @@ class DashboardTab extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          
-          // Nova estrutura usando Row + Expanded
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24.0),
             child: SizedBox(
-              height: 180, // Altura ajustada para manter a proporção dos cards menores
+              height: 180,
               child: Row(
                 children: [
-                  Expanded(child: GameCard(game: MockData.featuredGames[0])),
-                  const SizedBox(width: 12), // Espaço entre esquerda e meio
-                  Expanded(child: GameCard(game: MockData.featuredGames[1])),
-                  const SizedBox(width: 12), // Espaço entre meio e direita
-                  Expanded(child: GameCard(game: MockData.featuredGames[2])),
+                  Expanded(
+                    child: GameCard(
+                      game: MockData.featuredGames[0],
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => GameDetailsScreen(game: MockData.featuredGames[0])),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: GameCard(
+                      game: MockData.featuredGames[1],
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => GameDetailsScreen(game: MockData.featuredGames[1])),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: GameCard(
+                      game: MockData.featuredGames[2],
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => GameDetailsScreen(game: MockData.featuredGames[2])),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
           ),
-
           const SizedBox(height: 32),
-
-          // Seção 2: Últimas Resenhas (Lista Vertical)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24.0),
             child: Row(
@@ -107,7 +122,6 @@ class DashboardTab extends StatelessWidget {
               ],
             ),
           ),
-          
           ListView.builder(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
             physics: const NeverScrollableScrollPhysics(),
@@ -117,7 +131,6 @@ class DashboardTab extends StatelessWidget {
               return ReviewCard(review: MockData.recentReviews[index]);
             },
           ),
-          
           const SizedBox(height: 24),
         ],
       ),

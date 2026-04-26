@@ -4,8 +4,8 @@ import '../../models/review.dart';
 class ReviewCard extends StatelessWidget {
   final Review review;
 
-  const ReviewCard({Key? key, required this.review}) : super(key: key);
-
+  const ReviewCard({super.key, required this.review});
+  
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -31,11 +31,18 @@ class ReviewCard extends StatelessWidget {
                   children: [
                     Text(
                       review.username,
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 14),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontSize: 14,
+                      ),
                     ),
                     Text(
                       review.gameTitle,
-                      style: const TextStyle(color: Colors.purpleAccent, fontSize: 12),
+                      style: const TextStyle(
+                        color: Colors.purpleAccent,
+                        fontSize: 12,
+                      ),
                     ),
                   ],
                 ),
@@ -55,18 +62,26 @@ class ReviewCard extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             review.content,
-            style: const TextStyle(color: Colors.white70, height: 1.4, fontSize: 13),
+            style: const TextStyle(
+              color: Colors.white70,
+              height: 1.4,
+              fontSize: 13,
+            ),
           ),
           const SizedBox(height: 16),
           Row(
             children: [
-              const Icon(Icons.thumb_up_alt_outlined, color: Colors.white54, size: 16),
+              const Icon(
+                Icons.thumb_up_alt_outlined,
+                color: Colors.white54,
+                size: 16,
+              ),
               const SizedBox(width: 4),
-              Text('${review.likes}', style: const TextStyle(color: Colors.white54, fontSize: 12)),
+              Text(
+                '${review.likes}',
+                style: const TextStyle(color: Colors.white54, fontSize: 12),
+              ),
               const SizedBox(width: 16),
-              const Icon(Icons.chat_bubble_outline, color: Colors.white54, size: 16),
-              const SizedBox(width: 4),
-              Text('${review.comments}', style: const TextStyle(color: Colors.white54, fontSize: 12)),
             ],
           ),
         ],

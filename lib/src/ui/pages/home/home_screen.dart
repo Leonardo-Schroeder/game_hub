@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:game_hub/src/ui/pages/profile/profile_screen.dart';
 import '../auth/auth_screen.dart';
 import '../catalog/catalog_screen.dart';
 import '../review/review_screen.dart';
@@ -15,13 +16,13 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   
-  final bool _isUserLoggedIn = false;
+  final bool _isUserLoggedIn = true;
 
   final List<Widget> _pages = [
     const DashboardTab(),
     const CatalogScreen(),
     const ReviewScreen(),
-    const Center(child: Text('Profile Tab', style: TextStyle(color: Colors.white))),
+    const ProfileTab(),
   ];
 
   void _onTabTapped(int index) {
@@ -40,7 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
       body: _pages[_currentIndex],
-      // Utilizando o widget customizado aqui:
+      // Utilizado o widget customizado aqui:
       bottomNavigationBar: CustomBottomNav(
         currentIndex: _currentIndex,
         onTap: _onTabTapped,
