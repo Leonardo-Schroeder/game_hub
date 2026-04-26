@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'src/ui/pages/auth/auth_screen.dart';
+import 'package:game_hub/src/ui/pages/home/home_screen.dart';
 
 void main() {
   runApp(const GameHubApp());
@@ -21,7 +21,7 @@ class GameHubApp extends StatelessWidget {
           secondary: Colors.pinkAccent,
         ),
       ),
-      home: const AuthScreen(),
+      home: const HomeScreen(),
     );
   }
 }

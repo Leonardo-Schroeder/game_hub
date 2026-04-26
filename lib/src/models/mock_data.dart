@@ -8,14 +8,21 @@ class MockData {
       title: 'Cyberpunk 2077',
       genre: 'RPG',
       rating: 4.5,
-      imageUrl: 'cyberpunk', // In a real app, an http URL
+      imageUrl: 'assets/images/cyber.jpg', // In a real app, an http URL
     ),
     Game(
       id: 'g2',
       title: 'Red Dead Redemption II',
       genre: 'Ação/Aventura',
       rating: 4.9,
-      imageUrl: 'rdr2',
+      imageUrl: 'assets/images/red.jpg',
+    ),
+    Game(
+      id: 'g3',
+      title: 'Stardew Valley',
+      genre: 'RPG/Simulação',
+      rating: 4.95,
+      imageUrl: 'assets/images/stardew.jpg',
     ),
   ];
 
@@ -24,7 +31,7 @@ class MockData {
       id: 'r1',
       username: 'RPGMaster',
       gameTitle: 'Hollow Knight',
-      rating: 5.0,
+      rating: 4.0,
       content: 'Uma obra-prima absoluta! A atmosfera sombria e a jogabilidade fluida fazem deste um dos melhores metroidvanias já criados.',
       likes: 42,
       comments: 12,
@@ -37,6 +44,15 @@ class MockData {
       content: 'Simplesmente não consigo parar de jogar. A fazendinha é meu novo lar.',
       likes: 128,
       comments: 34,
+    ),
+    Review(
+      id: 'r3',
+      username: 'ShaolinMatadorDePorco',
+      gameTitle: 'Minecraft',
+      rating: 5.0,
+      content: 'Ulisses dá 10 para a gente',
+      likes: 999,
+      comments: 31,
     ),
   ];
 }

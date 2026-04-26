@@ -4,7 +4,7 @@ import '../../../widgets/game_card.dart';
 import '../../../widgets/review_card.dart';
 
 class DashboardTab extends StatelessWidget {
-  const DashboardTab({Key? key}) : super(key: key);
+  const DashboardTab({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +45,7 @@ class DashboardTab extends StatelessWidget {
 
           const SizedBox(height: 24),
 
-          // Seção 1: Jogos em Destaque (Lista Horizontal)
+          // Seção 1: Jogos em Destaque (3 colunas iguais)
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 24.0),
             child: Row(
@@ -61,20 +61,20 @@ class DashboardTab extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           
-          SizedBox(
-            height: 220, // Altura fixa para a lista horizontal
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              scrollDirection: Axis.horizontal,
-              itemCount: MockData.featuredGames.length,
-              itemBuilder: (context, index) {
-                final game = MockData.featuredGames[index];
-                return Container(
-                  width: 160, // Largura de cada card
-                  margin: const EdgeInsets.symmetric(horizontal: 8),
-                  child: GameCard(game: game), 
-                );
-              },
+          // Nova estrutura usando Row + Expanded
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: SizedBox(
+              height: 180, // Altura ajustada para manter a proporção dos cards menores
+              child: Row(
+                children: [
+                  Expanded(child: GameCard(game: MockData.featuredGames[0])),
+                  const SizedBox(width: 12), // Espaço entre esquerda e meio
+                  Expanded(child: GameCard(game: MockData.featuredGames[1])),
+                  const SizedBox(width: 12), // Espaço entre meio e direita
+                  Expanded(child: GameCard(game: MockData.featuredGames[2])),
+                ],
+              ),
             ),
           ),
 
@@ -99,7 +99,6 @@ class DashboardTab extends StatelessWidget {
                 IconButton(
                   icon: const Icon(Icons.filter_alt_outlined, color: Colors.white),
                   onPressed: () {
-                    // Feedback visual conforme critério do professor (Interação com o usuário)
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Filtro será implementado em breve!')),
                     );
@@ -109,7 +108,6 @@ class DashboardTab extends StatelessWidget {
             ),
           ),
           
-          // ListView vertical desativando o próprio scroll (pois o SingleChildScrollView já faz o scroll da tela toda)
           ListView.builder(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
             physics: const NeverScrollableScrollPhysics(),
@@ -120,7 +118,7 @@ class DashboardTab extends StatelessWidget {
             },
           ),
           
-          const SizedBox(height: 24), // Espaçamento extra no final
+          const SizedBox(height: 24),
         ],
       ),
     );

@@ -3,6 +3,7 @@ import '../auth/auth_screen.dart';
 import '../catalog/catalog_screen.dart';
 import '../review/review_screen.dart';
 import 'tabs/dashboard_tab.dart';
+import '../../widgets/custom_bottom_nav.dart'; 
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -39,19 +40,10 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
       body: _pages[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
+      // Utilizando o widget customizado aqui:
+      bottomNavigationBar: CustomBottomNav(
         currentIndex: _currentIndex,
         onTap: _onTabTapped,
-        backgroundColor: const Color(0xFF1E1E1E),
-        selectedItemColor: Colors.purpleAccent,
-        unselectedItemColor: Colors.grey,
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Inicio'),
-          BottomNavigationBarItem(icon: Icon(Icons.videogame_asset), label: 'Jogos'),
-          BottomNavigationBarItem(icon: Icon(Icons.edit), label: 'Resenhar'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Perfil'),
-        ],
       ),
     );
   }

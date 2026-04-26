@@ -21,10 +21,19 @@ class GameCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              child: Container(
-                color: Colors.grey[800],
+              child: Image.asset(
+                game.imageUrl,
                 width: double.infinity,
-                child: const Center(child: Icon(Icons.image, color: Colors.white54)),
+                fit: BoxFit.cover,
+                // O errorBuilder ajuda a descobrir se o caminho está errado ou se o formato da imagem não é suportado
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: Colors.grey[900],
+                    child: const Center(
+                      child: Icon(Icons.broken_image, color: Colors.red, size: 40),
+                    ),
+                  );
+                },
               ),
             ),
             Padding(
