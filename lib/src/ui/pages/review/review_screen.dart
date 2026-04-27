@@ -16,7 +16,7 @@ class ReviewScreen extends StatefulWidget {
 class _ReviewScreenState extends State<ReviewScreen> {
   // --- Variáveis de Estado ---
   Game?
-  _selectedGame; // Agora a tela sabe qual jogo foi escolhido! (Começa nulo)
+  _selectedGame; // Agora a tela sabe qual jogo foi escolhido (Começa nulo)
   double _rating = 4.5;
   bool _recommend = true;
   String _platform = 'PC';
