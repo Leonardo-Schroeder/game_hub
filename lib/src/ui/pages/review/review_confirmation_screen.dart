@@ -66,7 +66,7 @@ class ReviewConfirmationScreen extends StatelessWidget {
                 // Adicionei uma sombra neon bem sutil roxa atrás do card
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF9D00FF).withOpacity(0.1),
+                    color: const Color(0xFF9D00FF).withValues(alpha: 0.1),
                     blurRadius: 20,
                     spreadRadius: 2,
                   ),
@@ -136,7 +136,7 @@ class ReviewConfirmationScreen extends StatelessWidget {
                       // Sombra neon rosa atrás do botão
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFE100FF).withOpacity(0.3),
+                          color: const Color(0xFFE100FF).withValues(alpha: 0.3),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
