@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-// 👇 IMPORTANTE: Importando o pacote de animação!
 import 'package:flutter_animate/flutter_animate.dart'; 
 import '../home/home_screen.dart';
 
