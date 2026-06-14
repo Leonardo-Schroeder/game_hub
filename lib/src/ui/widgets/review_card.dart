@@ -7,14 +7,14 @@ class ReviewCard extends StatelessWidget {
   final ReviewModel review;
 
   const ReviewCard({super.key, required this.review});
-  
+
   @override
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A), // Um tom de cinza escuro
+        color: const Color(0xFF1A1A1A),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
