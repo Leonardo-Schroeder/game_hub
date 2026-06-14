@@ -1,4 +1,4 @@
-class Review {
+class ReviewModel {
   final String id;
   final String username;
   final String gameTitle;
@@ -7,7 +7,7 @@ class Review {
   final int likes;
   final int comments;
 
-  const Review({
+  const ReviewModel({
     required this.id,
     required this.username,
     required this.gameTitle,

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import '../../models/review.dart';
+// Removi o import do bloc que estava causando conflito de nomes
+import '../../data/models/review_model.dart';
 
 class ReviewCard extends StatelessWidget {
-  final Review review;
+  // 1. Corrigido de 'Review' para 'ReviewModel'
+  final ReviewModel review;
 
   const ReviewCard({super.key, required this.review});
   

@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:game_hub/src/data/repositories/review_repository.dart';
 import 'package:game_hub/src/ui/widgets/game_search_modal.dart';
-import '../../../models/review.dart';
-import '../../../models/game.dart'; // Precisamos importar o Game model
+
+import '../../../blocs/review/review.dart';
+import '../../../data/models/game.dart';
 import '../../widgets/game_selector_card.dart';
 import '../home/home_screen.dart';
 import 'review_confirmation_screen.dart';
@@ -15,8 +19,7 @@ class ReviewScreen extends StatefulWidget {
 
 class _ReviewScreenState extends State<ReviewScreen> {
   // --- Variáveis de Estado ---
-  Game?
-  _selectedGame; // Agora a tela sabe qual jogo foi escolhido! (Começa nulo)
+  Game? _selectedGame;
   double _rating = 4.5;
   bool _recommend = true;
   String _platform = 'PC';
@@ -24,16 +27,15 @@ class _ReviewScreenState extends State<ReviewScreen> {
   bool _agreedToRules = false;
 
   final TextEditingController _reviewController = TextEditingController();
+  final ReviewRepository _reviewRepository = ReviewRepository();
 
   void _openGameSelector() async {
     final Game? gamePegoDaLista = await showModalBottomSheet<Game>(
       context: context,
       isScrollControlled: true,
-      backgroundColor:
-          Colors.transparent, // Deixa transparente pro modal desenhar a borda
+      backgroundColor: Colors.transparent,
       builder: (BuildContext context) {
         return Padding(
-          // Esse padding faz o modal subir se o teclado aparecer!
           padding: EdgeInsets.only(
             bottom: MediaQuery.of(context).viewInsets.bottom,
           ),
@@ -49,8 +51,8 @@ class _ReviewScreenState extends State<ReviewScreen> {
     }
   }
 
-  void _submitReview() {
-    // Validação: Verificamos se o jogo foi escolhido!
+  // FUNÇÃO ATUALIZADA PARA SALVAR NO BANCO
+  void _submitReview() async {
     if (_selectedGame == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -71,27 +73,70 @@ class _ReviewScreenState extends State<ReviewScreen> {
       return;
     }
 
-    final novaResenha = Review(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      username: 'Leonardo',
-      gameTitle:
-          _selectedGame!.title, // Usando o título do jogo escolhido de verdade!
-      rating: _rating,
-      content: _reviewController.text.isEmpty
-          ? 'Sem comentários.'
-          : _reviewController.text,
-      likes: 0,
-      comments: 0,
+    // Exibe o loading enquanto salva
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(color: Colors.purpleAccent),
+      ),
     );
 
-    debugPrint(
-      'Resenha salva: ${novaResenha.gameTitle} - Nota: ${novaResenha.rating}',
-    );
+    try {
+      // Pega o usuário logado
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) throw Exception('Usuário não logado');
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const ReviewConfirmationScreen()),
-    );
+      // Busca o username no banco (se não achar, usa um genérico)
+      final userDoc = await FirebaseFirestore.instance.collection('users').doc(currentUser.uid).get();
+      
+      // CORREÇÃO: Forçando a tipagem para String
+      final String username = (userDoc.data()?['username'] as String?) ?? 'Gamer';
+
+      // Cria a resenha com os dados da tela
+      final String reviewId = DateTime.now().millisecondsSinceEpoch.toString();
+      
+      final novaResenha = Review(
+        id: reviewId,
+        userId: currentUser.uid,
+        username: username,
+        gameTitle: _selectedGame!.title,
+        rating: _rating,
+        content: _reviewController.text.isEmpty ? 'Sem comentários.' : _reviewController.text,
+        recommend: _recommend,
+        platform: _platform,
+        hasSpoilers: _hasSpoilers,
+        createdAt: DateTime.now(),
+      );
+
+      // Salva no banco de dados
+      await _reviewRepository.createReview(novaResenha);
+
+      await FirebaseFirestore.instance.collection('users').doc(currentUser.uid).update({
+        'reviewsCount': FieldValue.increment(1), // Soma 1 automaticamente no Firebase
+      });
+      
+      // Tira o loading da tela
+      if (mounted) Navigator.pop(context);
+
+      // Redireciona para a tela de sucesso
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const ReviewConfirmationScreen()),
+        );
+      }
+    } catch (e) {
+      // Em caso de erro, tira o loading e mostra o erro
+      if (mounted) Navigator.pop(context);
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao salvar resenha: $e'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
   }
 
   @override
@@ -146,14 +191,12 @@ class _ReviewScreenState extends State<ReviewScreen> {
           ),
         ),
       ),
-
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildSectionTitle('Selecione o jogo'),
-            // Passamos o _selectedGame e conectamos a função _openGameSelector
             GameSelectorCard(
               selectedGame: _selectedGame,
               isMinimal: false,
@@ -311,28 +354,25 @@ class _ReviewScreenState extends State<ReviewScreen> {
                 color: const Color(0xFF1E1E1E),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: RadioGroup<String>(
-                groupValue: _platform,
-                onChanged: (val) {
-                  if (val != null) {
-                    setState(() => _platform = val);
-                  }
-                },
-                child: Column(
-                  children: ['PC', 'Console', 'Mobile']
-                      .map(
-                        (p) => RadioListTile<String>(
-                          title: Text(
-                            p,
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                          value: p,
-                          activeColor: Colors.purpleAccent,
-                          // Removemos o groupValue e o onChanged que ficavam aqui!
+              child: Column(
+                children: ['PC', 'Console', 'Mobile']
+                    .map(
+                      (p) => RadioListTile<String>(
+                        title: Text(
+                          p,
+                          style: const TextStyle(color: Colors.white),
                         ),
-                      )
-                      .toList(),
-                ),
+                        value: p,
+                        groupValue: _platform,
+                        activeColor: Colors.purpleAccent,
+                        onChanged: (val) {
+                          if (val != null) {
+                            setState(() => _platform = val);
+                          }
+                        },
+                      ),
+                    )
+                    .toList(),
               ),
             ),
 

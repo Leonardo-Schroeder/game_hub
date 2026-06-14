@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../models/game.dart';
+import '../../data/models/game.dart';
 
 class GameCard extends StatelessWidget {
   final Game game;
@@ -20,20 +20,21 @@ class GameCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // 🔹 AQUI ESTÁ A GRANDE MUDANÇA: Lógica de imagem inteligente
             Expanded(
-              child: Image.asset(
-                game.imageUrl,
+              child: SizedBox(
                 width: double.infinity,
-                fit: BoxFit.cover,
-                // O errorBuilder ajuda a descobrir se o caminho está errado ou se o formato da imagem não é suportado
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: Colors.grey[900],
-                    child: const Center(
-                      child: Icon(Icons.broken_image, color: Colors.red, size: 40),
-                    ),
-                  );
-                },
+                child: game.imageUrl.startsWith('http')
+                    ? Image.network(
+                        game.imageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => _buildErrorPlaceholder(),
+                      )
+                    : Image.asset(
+                        game.imageUrl.isEmpty ? 'assets/images/placeholder.png' : game.imageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => _buildErrorPlaceholder(),
+                      ),
               ),
             ),
             Padding(
@@ -50,10 +51,19 @@ class GameCard extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(game.genre, style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                      // 🔹 Adicionado o Expanded e overflow no gênero para evitar quebra de layout se o texto for longo
+                      Expanded(
+                        child: Text(
+                          game.genre, 
+                          style: const TextStyle(color: Colors.white54, fontSize: 12),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
                       Row(
                         children: [
                           const Icon(Icons.star, color: Colors.amber, size: 14),
+                          const SizedBox(width: 4), // Pequeno espaço entre estrela e número
                           Text(game.rating.toString(), style: const TextStyle(color: Colors.white, fontSize: 12)),
                         ],
                       )
@@ -64,6 +74,16 @@ class GameCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // 🔹 Criamos um widget separado para o erro, deixando o código mais limpo e amigável
+  Widget _buildErrorPlaceholder() {
+    return Container(
+      color: Colors.grey[900],
+      child: const Center(
+        child: Icon(Icons.videogame_asset, color: Colors.white24, size: 40),
       ),
     );
   }

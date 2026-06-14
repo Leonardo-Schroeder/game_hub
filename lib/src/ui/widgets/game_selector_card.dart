@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:game_hub/src/models/game.dart';
+import 'package:game_hub/src/data/models/game.dart';
 
 class GameSelectorCard extends StatelessWidget {
   final Game? selectedGame; // Recebe o modelo do jogo. Se for null, mostra estado vazio.

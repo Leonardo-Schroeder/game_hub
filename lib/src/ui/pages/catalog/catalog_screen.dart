@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:game_hub/src/models/mock_data.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:game_hub/src/ui/pages/catalog/game_details_screen.dart';
-import '../../../models/game.dart';
+
+// 🔹 Importações do BLoC em vez do Firestore
+import 'package:game_hub/src/blocs/catalog/catalog_bloc.dart';
 import '../../widgets/game_card.dart';
 
 class CatalogScreen extends StatefulWidget {
@@ -12,41 +14,15 @@ class CatalogScreen extends StatefulWidget {
 }
 
 class _CatalogScreenState extends State<CatalogScreen> {
-  final ScrollController _scrollController = ScrollController();
-  bool _isLoadingMore = false;
-  
+  String _searchQuery = ''; 
   Set<String> _selectedFilters = {}; 
   final List<String> _availableFilters = ['RPG', 'Indie', 'Plataforma', 'Ação', 'Simulação', 'Metroidvania'];
 
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_onScroll);
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  List<Game> get _filteredGames {
-    if (_selectedFilters.isEmpty) return MockData.catalogGames;
-    return MockData.catalogGames.where((game) {
-      return _selectedFilters.any((filter) => game.genre.contains(filter));
-    }).toList();
-  }
-
-  void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 50 && !_isLoadingMore) {
-      _fetchMoreGames();
-    }
-  }
-
-  Future<void> _fetchMoreGames() async {
-    setState(() => _isLoadingMore = true);
-    await Future.delayed(const Duration(seconds: 2));
-    if (mounted) setState(() => _isLoadingMore = false);
+    // 🔹 Dispara o evento para o BLoC buscar os dados quando a tela abre
+    context.read<CatalogBloc>().add(LoadCatalogEvent());
   }
 
   void _showFilterModal() {
@@ -175,22 +151,27 @@ class _CatalogScreenState extends State<CatalogScreen> {
             textStyle: WidgetStateProperty.all(const TextStyle(color: Colors.white)),
             hintStyle: WidgetStateProperty.all(const TextStyle(color: Colors.white54)),
             padding: WidgetStateProperty.all(const EdgeInsets.symmetric(horizontal: 16)),
+            onChanged: (value) {
+              setState(() {
+                _searchQuery = value.toLowerCase();
+              });
+            },
           ),
         ],
       ),
     );
   }
 
-  Widget _buildFilterBar() {
+  Widget _buildFilterBar(int resultCount) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            _selectedFilters.isEmpty 
+            _selectedFilters.isEmpty && _searchQuery.isEmpty
                 ? 'Todos os Jogos' 
-                : '${_filteredGames.length} Resultados',
+                : '$resultCount Resultados',
             style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
           ),
           OutlinedButton.icon(
@@ -215,55 +196,89 @@ class _CatalogScreenState extends State<CatalogScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final gamesToDisplay = _filteredGames;
-
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
       extendBodyBehindAppBar: true,
       body: Column(
         children: [
           _buildHeader(),
-          _buildFilterBar(), 
           
+          // 🔹 Substituímos o StreamBuilder pelo BlocBuilder
           Expanded(
-            child: gamesToDisplay.isEmpty
-                ? const Center(
-                    child: Text(
-                      'Nenhum jogo encontrado.',
-                      style: TextStyle(color: Colors.white54),
-                    ),
-                  )
-                : GridView.builder(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      childAspectRatio: 0.75,
-                    ),
-                    itemCount: gamesToDisplay.length,
-                    itemBuilder: (ctx, i) {
-                      final game = gamesToDisplay[i];
-                      return GameCard(
-                        game: game,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => GameDetailsScreen(game: game),
-                            ),
-                          );
-                        },
-                      );
-                    },
-                  ),
-          ),
-          if (_isLoadingMore)
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: CircularProgressIndicator(color: Colors.purpleAccent),
+            child: BlocBuilder<CatalogBloc, CatalogState>(
+              builder: (context, state) {
+                
+                if (state is CatalogLoadingState) {
+                  return const Center(child: CircularProgressIndicator(color: Colors.purpleAccent));
+                }
+
+                if (state is CatalogErrorState) {
+                  return Center(
+                    child: Text(state.message, style: const TextStyle(color: Colors.redAccent)),
+                  );
+                }
+
+                if (state is CatalogLoadedState) {
+                  final allGames = state.games;
+
+                  if (allGames.isEmpty) {
+                    return const Center(
+                      child: Text('Nenhum jogo no catálogo.', style: TextStyle(color: Colors.white54)),
+                    );
+                  }
+
+                  // 2. Aplica os SEUS filtros perfeitamente em cima da lista do BLoC
+                  final filteredGames = allGames.where((game) {
+                    final matchesSearch = _searchQuery.isEmpty || game.title.toLowerCase().contains(_searchQuery);
+                    final matchesFilter = _selectedFilters.isEmpty || _selectedFilters.any((filter) => game.genre.contains(filter));
+                    return matchesSearch && matchesFilter;
+                  }).toList();
+
+                  return Column(
+                    children: [
+                      _buildFilterBar(filteredGames.length), 
+                      
+                      Expanded(
+                        child: filteredGames.isEmpty
+                            ? const Center(
+                                child: Text(
+                                  'Nenhum jogo encontrado com esses filtros.',
+                                  style: TextStyle(color: Colors.white54),
+                                ),
+                              )
+                            : GridView.builder(
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 2,
+                                  crossAxisSpacing: 16,
+                                  mainAxisSpacing: 16,
+                                  childAspectRatio: 0.75,
+                                ),
+                                itemCount: filteredGames.length,
+                                itemBuilder: (ctx, i) {
+                                  final game = filteredGames[i];
+                                  return GameCard(
+                                    game: game,
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => GameDetailsScreen(game: game),
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
+                              ),
+                      ),
+                    ],
+                  );
+                }
+                
+                return const SizedBox();
+              },
             ),
+          ),
         ],
       ),
     );

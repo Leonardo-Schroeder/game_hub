@@ -1,8 +1,8 @@
-// lib/src/ui/pages/catalog/game_details_screen.dart
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:game_hub/src/ui/pages/review/review_screen.dart';
-import '../../../models/game.dart';
-import '../../../models/mock_data.dart';
+import '../../../data/models/game.dart';
+import '../../../data/models/review_model.dart'; // 🔹 Importamos o modelo ao invés do mock
 import '../../widgets/review_card.dart';
 
 class GameDetailsScreen extends StatelessWidget {
@@ -12,22 +12,18 @@ class GameDetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Para simplificar, vamos pegar as resenhas do MockData para demonstrar
-    // No app final, vamos fazer um filtro: reviews.where((r) => r.gameTitle == game.title)
-    final reviews = MockData.recentReviews;
-
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: Text(game.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(game.title, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       extendBodyBehindAppBar: true,
       
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          // 2. Substituímos o SnackBar pela navegação!
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -44,14 +40,27 @@ class GameDetailsScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // 🔹 Ajuste para carregar imagens da Web (Network) ou Locais (Asset)
             SizedBox(
               width: double.infinity,
               height: 300,
-              child: Image.asset(
-                game.imageUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(color: Colors.grey[800]),
-              ),
+              child: game.imageUrl.startsWith('http')
+                  ? Image.network(
+                      game.imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        color: Colors.grey[800], 
+                        child: const Icon(Icons.image_not_supported, color: Colors.white54, size: 50),
+                      ),
+                    )
+                  : Image.asset(
+                      game.imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        color: Colors.grey[800], 
+                        child: const Icon(Icons.image_not_supported, color: Colors.white54, size: 50),
+                      ),
+                    ),
             ),
             
             Padding(
@@ -68,7 +77,7 @@ class GameDetailsScreen extends StatelessWidget {
                         children: [
                           const Icon(Icons.star, color: Colors.amber, size: 20),
                           const SizedBox(width: 4),
-                          Text(game.rating.toString(), style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                          Text(game.rating.toStringAsFixed(1), style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
                         ],
                       ),
                     ],
@@ -82,20 +91,61 @@ class GameDetailsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   
-                  // Lista de Resenhas
-                  ListView.builder(
-                    padding: EdgeInsets.zero,
-                    physics: const NeverScrollableScrollPhysics(), // Desativa o scroll da lista, o SingleChildScrollView já faz isso
-                    shrinkWrap: true,
-                    itemCount: reviews.length,
-                    itemBuilder: (context, index) {
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12.0),
-                        child: ReviewCard(review: reviews[index]),
+                  // 🔹 StreamBuilder para buscar as resenhas SÓ DESTE JOGO no Firebase
+                  StreamBuilder<QuerySnapshot>(
+                    stream: FirebaseFirestore.instance
+                        .collection('reviews')
+                        .where('gameTitle', isEqualTo: game.title) // O "Segredo" do filtro
+                        .orderBy('createdAt', descending: true)
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator(color: Colors.purpleAccent));
+                      }
+
+                      if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                        return const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 32.0),
+                          child: Center(
+                            child: Text(
+                              'Ainda não há resenhas para este jogo.\nSeja o primeiro a avaliar!',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: Colors.white54),
+                            ),
+                          ),
+                        );
+                      }
+
+                      final docs = snapshot.data!.docs;
+
+                      return ListView.builder(
+                        padding: EdgeInsets.zero,
+                        physics: const NeverScrollableScrollPhysics(), // Mantém o scroll fluido no SingleChildScrollView
+                        shrinkWrap: true,
+                        itemCount: docs.length,
+                        itemBuilder: (context, index) {
+                          final data = docs[index].data() as Map<String, dynamic>;
+                          
+                          // Mapeando do Banco para o Modelo
+                          final review = ReviewModel(
+                            id: docs[index].id,
+                            username: data['username'] ?? 'Usuário',
+                            gameTitle: data['gameTitle'] ?? game.title,
+                            rating: (data['rating'] ?? 0.0).toDouble(),
+                            content: data['content'] ?? '',
+                            likes: data['likes'] ?? 0,
+                            comments: data['comments'] ?? 0,
+                          );
+
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12.0),
+                            child: ReviewCard(review: review),
+                          );
+                        },
                       );
                     },
                   ),
-                  const SizedBox(height: 60), // Espaço para não ficar atrás do FloatingActionButton
+                  const SizedBox(height: 80), // Espaço para não esconder nada debaixo do botão
                 ],
               ),
             ),
