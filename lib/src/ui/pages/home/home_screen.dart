@@ -24,14 +24,15 @@ class HomeScreen extends StatelessWidget {
     // Pegamos o estado atual do AuthBloc diretamente do context
     final authState = context.read<AuthBloc>().state;
 
-    // Se o usuário tentar acessar Resenhas (2) ou Perfil (3) e NÃO estiver autenticado
-    if ((index == 2 || index == 3) && authState is UnauthenticatedState) {
+    // 👇 Usamos "is! AuthenticatedState" (Se NÃO estiver logado)
+    // Isso garante que se o estado for Initial, Failure ou Unauthenticated, ele vai pro Login
+    if ((index == 2 || index == 3) && authState is! AuthenticatedState) {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => const AuthScreen()),
       );
     } else {
-      // Se estiver logado (ou se for abas públicas), navega normalmente
+      // Se estiver logado (ou se for abas públicas: Dashboard e Catálogo), navega normalmente
       context.read<NavigationBloc>().add(TabTappedEvent(index));
     }
   }

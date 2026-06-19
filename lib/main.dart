@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:game_hub/src/blocs/auth/auth_state.dart';
 import 'firebase_options.dart';
 
 // Repositories e BLoCs
@@ -16,7 +15,6 @@ import 'src/blocs/catalog/catalog_bloc.dart';
 
 // Telas
 import 'src/ui/pages/home/home_screen.dart';
-import 'src/ui/pages/auth/auth_screen.dart'; 
 
 // 👇 ESTA É A FUNÇÃO MAIN QUE O CHROME PRECISA PARA ABRIR O APP 👇
 void main() async {
@@ -57,28 +55,8 @@ class GameHubApp extends StatelessWidget {
             secondary: Colors.pinkAccent,
           ),
         ),
-        home: BlocBuilder<AuthBloc, AuthState>(
-          builder: (context, state) {
-            // Se estiver logado, vai pra Home
-            if (state is AuthenticatedState) {
-              return const HomeScreen();
-            }
-            
-            // Se não estiver logado ou der erro, vai pro Login
-            if (state is UnauthenticatedState || state is AuthLoadingState || state is AuthFailureState) {
-              return const AuthScreen();
-            }
-            
-            // Tela de carregamento inicial
-            return const Scaffold(
-              body: Center(
-                child: CircularProgressIndicator(
-                  color: Colors.purpleAccent,
-                ),
-              ),
-            );
-          },
-        ),
+        // 👇 Agora a Home é o ponto de partida absoluto, sem bloqueios!
+        home: const HomeScreen(),
       ),
     );
   }
