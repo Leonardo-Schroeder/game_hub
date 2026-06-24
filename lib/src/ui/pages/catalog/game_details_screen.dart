@@ -1,5 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:game_hub/src/ui/pages/auth/auth_screen.dart';
 import 'package:game_hub/src/ui/pages/review/review_screen.dart';
 import '../../../data/models/game.dart';
 import '../../../data/models/review_model.dart'; // 🔹 Importamos o modelo ao invés do mock
@@ -24,12 +26,28 @@ class GameDetailsScreen extends StatelessWidget {
       
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const ReviewScreen(),
-            ),
-          );
+          // 1. Verifica se existe um usuário logado no Firebase Auth
+          final user = FirebaseAuth.instance.currentUser;
+
+          if (user != null) {
+            // 2. Se estiver logado, vai para a tela de criar resenha
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const ReviewScreen(),
+              ),
+            );
+          } else {
+            // 3. Se NÃO estiver logado, exibe um aviso ou redireciona
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Você precisa estar logado para escrever uma resenha!'),
+                backgroundColor: Colors.redAccent,
+                duration: Duration(seconds: 3),
+              ),
+            );
+            Navigator.push(context, MaterialPageRoute(builder: (context) => const AuthScreen()));
+          }
         },
         backgroundColor: Colors.purpleAccent,
         icon: const Icon(Icons.edit, color: Colors.white),
