@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:game_hub/src/ui/pages/auth/auth_screen.dart';
 import 'package:game_hub/src/ui/pages/review/review_screen.dart';
 import '../../../data/models/game.dart';
-import '../../../data/models/review_model.dart'; // 🔹 Importamos o modelo ao invés do mock
+import '../../../data/models/review_model.dart'; 
 import '../../widgets/review_card.dart';
 
 class GameDetailsScreen extends StatelessWidget {
@@ -26,11 +26,9 @@ class GameDetailsScreen extends StatelessWidget {
       
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          // 1. Verifica se existe um usuário logado no Firebase Auth
           final user = FirebaseAuth.instance.currentUser;
 
           if (user != null) {
-            // 2. Se estiver logado, vai para a tela de criar resenha
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -38,7 +36,6 @@ class GameDetailsScreen extends StatelessWidget {
               ),
             );
           } else {
-            // 3. Se NÃO estiver logado, exibe um aviso ou redireciona
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('Você precisa estar logado para escrever uma resenha!'),
@@ -58,7 +55,6 @@ class GameDetailsScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 🔹 Ajuste para carregar imagens da Web (Network) ou Locais (Asset)
             SizedBox(
               width: double.infinity,
               height: 300,
@@ -86,7 +82,6 @@ class GameDetailsScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Informações do jogo
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -102,19 +97,16 @@ class GameDetailsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 32),
                   
-                  // Seção de Resenhas
                   const Text(
                     'Últimas Resenhas',
                     style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white),
                   ),
                   const SizedBox(height: 16),
                   
-                  // 🔹 StreamBuilder para buscar as resenhas SÓ DESTE JOGO no Firebase
                   StreamBuilder<QuerySnapshot>(
                     stream: FirebaseFirestore.instance
                         .collection('reviews')
-                        .where('gameTitle', isEqualTo: game.title) // O "Segredo" do filtro
-                        .orderBy('createdAt', descending: true)
+                        .where('gameTitle', isEqualTo: game.title) 
                         .snapshots(),
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
@@ -134,17 +126,38 @@ class GameDetailsScreen extends StatelessWidget {
                         );
                       }
 
-                      final docs = snapshot.data!.docs;
+                      final docs = snapshot.data!.docs.toList();
+
+                      // 🔹 A MÁGICA ACONTECE AQUI: Ordenação à prova de falhas
+                      docs.sort((a, b) {
+                        final dataA = a.data() as Map<String, dynamic>;
+                        final dataB = b.data() as Map<String, dynamic>;
+                        
+                        // Função interna para descobrir que tipo de data o Firebase nos deu
+                        DateTime? parseDate(dynamic dateData) {
+                          if (dateData == null) return null;
+                          if (dateData is Timestamp) return dateData.toDate(); // Se for Timestamp
+                          if (dateData is String) return DateTime.tryParse(dateData); // Se for String
+                          return null;
+                        }
+
+                        final timeA = parseDate(dataA['createdAt']);
+                        final timeB = parseDate(dataB['createdAt']);
+                        
+                        if (timeA != null && timeB != null) {
+                          return timeB.compareTo(timeA); // Descendente (mais novas primeiro)
+                        }
+                        return 0;
+                      });
 
                       return ListView.builder(
                         padding: EdgeInsets.zero,
-                        physics: const NeverScrollableScrollPhysics(), // Mantém o scroll fluido no SingleChildScrollView
+                        physics: const NeverScrollableScrollPhysics(),
                         shrinkWrap: true,
                         itemCount: docs.length,
                         itemBuilder: (context, index) {
                           final data = docs[index].data() as Map<String, dynamic>;
                           
-                          // Mapeando do Banco para o Modelo
                           final review = ReviewModel(
                             id: docs[index].id,
                             username: data['username'] ?? 'Usuário',
@@ -163,7 +176,7 @@ class GameDetailsScreen extends StatelessWidget {
                       );
                     },
                   ),
-                  const SizedBox(height: 80), // Espaço para não esconder nada debaixo do botão
+                  const SizedBox(height: 80), 
                 ],
               ),
             ),
