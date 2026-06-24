@@ -16,7 +16,6 @@ import 'src/blocs/catalog/catalog_bloc.dart';
 // Telas
 import 'src/ui/pages/home/home_screen.dart';
 
-// 👇 ESTA É A FUNÇÃO MAIN QUE O CHROME PRECISA PARA ABRIR O APP 👇
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
@@ -55,7 +54,6 @@ class GameHubApp extends StatelessWidget {
             secondary: Colors.pinkAccent,
           ),
         ),
-        // 👇 Agora a Home é o ponto de partida absoluto, sem bloqueios!
         home: const HomeScreen(),
       ),
     );

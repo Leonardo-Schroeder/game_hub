@@ -18,7 +18,7 @@ class DashboardTab extends StatelessWidget {
           // 🔹 Cabeçalho
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.only(top: 48, left: 24, right: 24, bottom: 24), // Aumentei o top para não colar no relógio do celular
+            padding: const EdgeInsets.only(top: 48, left: 24, right: 24, bottom: 24),
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 colors: [Color(0xFF8A2BE2), Color(0xFFFF1493)],
@@ -118,29 +118,16 @@ class DashboardTab extends StatelessWidget {
           
           const SizedBox(height: 32),
           
-          // 🔹 Título: Últimas Resenhas
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          // 🔹 Título: Últimas Resenhas (Sem o botão de filtro)
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 24.0),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Row(
-                  children: [
-                    Icon(Icons.chat_bubble, color: Colors.white, size: 20),
-                    SizedBox(width: 8),
-                    Text(
-                      'Últimas Resenhas',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
-                    ),
-                  ],
-                ),
-                IconButton(
-                  icon: const Icon(Icons.filter_alt_outlined, color: Colors.white),
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Filtro será implementado em breve!')),
-                    );
-                  },
+                Icon(Icons.chat_bubble, color: Colors.white, size: 20),
+                SizedBox(width: 8),
+                Text(
+                  'Últimas Resenhas',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
                 ),
               ],
             ),

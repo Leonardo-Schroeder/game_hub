@@ -1,9 +1,10 @@
-import 'dart:io';
+import 'dart:typed_data'; // Adicionado para suportar bytes na Web e Mobile
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:game_hub/src/data/repositories/friends_repository.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 import 'package:game_hub/src/blocs/review/review.dart';
 import 'package:game_hub/src/ui/pages/admin/admin_panel_screen.dart';
@@ -24,7 +25,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  File? _profileImage;
+  Uint8List? _profileImageBytes; // Substituído de File para Uint8List para suportar a Web
   final ImagePicker _picker = ImagePicker();
   
   final ReviewRepository _reviewRepository = ReviewRepository();
@@ -47,21 +48,57 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _friendsStream = _friendRepository.getFriendsStream(currentUserId); 
   }
 
+  // Novo método _pickImage adaptado para a Web e enviando para o Firebase Storage
   Future<void> _pickImage() async {
     try {
       final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+      
       if (pickedFile != null) {
+        // 1. Lê a imagem como Bytes (Funciona no Chrome e no Celular perfeitamente)
+        final Uint8List imageBytes = await pickedFile.readAsBytes();
+        
+        // 2. Atualiza a tela imediatamente para o usuário ver a foto
         setState(() {
-          _profileImage = File(pickedFile.path);
+          _profileImageBytes = imageBytes;
         });
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Foto atualizada com sucesso!'), backgroundColor: Colors.purple),
+            const SnackBar(content: Text('Enviando foto para a nuvem...'), backgroundColor: Colors.blueAccent),
+          );
+        }
+
+        // 3. Prepara o caminho no Firebase Storage
+        final User? currentUser = FirebaseAuth.instance.currentUser;
+        if (currentUser == null) return;
+        
+        final storageRef = FirebaseStorage.instance
+            .ref()
+            .child('profile_images')
+            .child('${currentUser.uid}.jpg');
+
+        // 4. Faz o upload da imagem usando os Bytes
+        await storageRef.putData(imageBytes);
+
+        // 5. Pega o link (URL) da imagem que acabou de subir
+        final String downloadUrl = await storageRef.getDownloadURL();
+
+        // 6. Salva a URL no perfil do usuário no Firebase Auth
+        await currentUser.updatePhotoURL(downloadUrl);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Foto salva com sucesso!'), backgroundColor: Colors.purple),
           );
         }
       }
     } catch (e) {
-      debugPrint('Erro ao pegar imagem: $e');
+      debugPrint('Erro ao pegar/upar imagem: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Erro ao atualizar foto.'), backgroundColor: Colors.red),
+        );
+      }
     }
   }
 
@@ -303,6 +340,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         String username = 'Jogador';
         String email = '';
         bool isAdmin = false; 
+        
+        // Pega a URL da foto de perfil diretamente da nuvem
+        String? photoUrl = FirebaseAuth.instance.currentUser?.photoURL;
 
         if (state is AuthenticatedState) {
           username = state.user.username;
@@ -351,16 +391,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   IconButton(
                                     icon: const Icon(Icons.logout, color: Colors.white),
                                     onPressed: () {
-                                      // 🔹 1. Cria uma tela de carregamento INVIOLÁVEL no momento do clique
                                       showDialog(
                                         context: context,
-                                        barrierDismissible: false, // O usuário não consegue clicar fora para fechar
+                                        barrierDismissible: false,
                                         builder: (context) {
                                           return BlocListener<AuthBloc, AuthState>(
                                             listener: (context, state) {
-                                              // 🔹 3. Assim que o BLoC avisa que o Firebase deslogou com sucesso:
                                               if (state is UnauthenticatedState || state is AuthFailureState) {
-                                                // Destrói tudo e te joga pra raiz do app (Tela de Login)
                                                 Navigator.of(context, rootNavigator: true).popUntil((route) => route.isFirst);
                                               }
                                             },
@@ -370,8 +407,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           );
                                         },
                                       );
-
-                                      // 🔹 2. Dispara a ordem de logout para o Firebase
                                       context.read<AuthBloc>().add(LogoutRequestedEvent());
                                     },
                                     padding: EdgeInsets.zero,
@@ -405,9 +440,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         border: Border.all(color: Colors.white, width: 2),
                                         color: Colors.white10,
                                       ),
-                                      child: _profileImage != null 
-                                          ? ClipOval(child: Image.file(_profileImage!, fit: BoxFit.cover))
-                                          : const Icon(Icons.person, size: 40, color: Colors.white30),
+                                      child: _profileImageBytes != null 
+                                          // 🔹 Mostra a foto escolhida na hora usando Memory (Bytes)
+                                          ? ClipOval(child: Image.memory(_profileImageBytes!, fit: BoxFit.cover, width: 80, height: 80))
+                                          // 🔹 Se não, tenta baixar a foto que já está no Firebase
+                                          : (photoUrl != null && photoUrl.isNotEmpty
+                                              ? ClipOval(
+                                                  child: Image.network(
+                                                    photoUrl, 
+                                                    fit: BoxFit.cover, 
+                                                    width: 80, 
+                                                    height: 80,
+                                                    errorBuilder: (context, error, stackTrace) => const Icon(Icons.person, size: 40, color: Colors.white30),
+                                                  )
+                                                )
+                                              // 🔹 Se não tem foto nenhuma, mostra o ícone de avatar padrão
+                                              : const Icon(Icons.person, size: 40, color: Colors.white30)),
                                     ),
                                     Container(
                                       padding: const EdgeInsets.all(4),

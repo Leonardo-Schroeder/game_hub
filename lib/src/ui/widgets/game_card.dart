@@ -78,7 +78,6 @@ class GameCard extends StatelessWidget {
     );
   }
 
-  // 🔹 Criamos um widget separado para o erro, deixando o código mais limpo e amigável
   Widget _buildErrorPlaceholder() {
     return Container(
       color: Colors.grey[900],
